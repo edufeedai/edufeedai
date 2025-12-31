@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  edufeedai-dev:
+    image: arturocandela/edufeedai-dev:latest
+    container_name: edufeedai-dev
+    ports:
+      - "5005:5005"  
+    volumes:
+      - .:/app
+      - ../testlab:/testlab       
+    environment:
+      - NODE_ENV=development
+      
+  agent-zero:
+    image: frdel/agent-zero-run
+    container_name: agent-zero
+    ports:
+      - "50001:80"
+      - "40022:22"
+    volumes:
+      - .:/mnt/edufeedai
+      - ../agent-zero-data:/a0
