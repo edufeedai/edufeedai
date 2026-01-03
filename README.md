@@ -52,4 +52,4 @@ EduFeedAI es una aplicación Java para procesar boletines de alumnos en PDF, usa
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia GPLv3. Consulta el archivo [LICENSE](./LICENSE.md) para más detalles.
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](./LICENSE.md) para más detalles.
