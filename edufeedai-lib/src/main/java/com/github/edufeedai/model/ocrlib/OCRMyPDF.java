@@ -34,7 +34,7 @@ public class OCRMyPDF {
         Path ocr = Path.of(base + ".ocr.pdf");
         //Path opt = Path.of(base + ".ocr.opt.pdf");
 
-        run(List.of("ocrmypdf", "--force-ocr", "--threshold", "--clean", "--deskew", "--optimize", "0", "-l", "spa+eng+cat", "--output-type", "pdf",
+        run(List.of("ocrmypdf", "--force-ocr", "--tesseract-thresholding", "adaptive-otsu", "--clean", "--deskew", "--optimize", "0", "-l", "spa+eng+cat", "--output-type", "pdf",
                 inPdf.toString(), ocr.toString()));
 
         //run(List.of("ocrmypdf", "--skip-text", "--optimize", "2", "--jpeg-quality", "60",
