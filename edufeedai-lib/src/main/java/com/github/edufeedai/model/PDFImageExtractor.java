@@ -60,7 +60,7 @@ public class PDFImageExtractor extends PDFStreamEngine {
     public static List<ExtractedImage> extractImages(Path pdfPath) throws IOException {
         // Crear subcarpeta para imágenes
         String pdfName = pdfPath.getFileName().toString().replaceFirst("[.][^.]+$", "");
-        Path imagesDir = pdfPath.getParent().resolve(pdfName + "_images");
+        Path imagesDir = pdfPath.getParent().resolve(pdfName + "_imgs");
         Files.createDirectories(imagesDir);
 
         logger.info("Extrayendo imágenes de PDF: {} -> {}", pdfPath, imagesDir);
@@ -132,8 +132,8 @@ public class PDFImageExtractor extends PDFStreamEngine {
         int height = bufferedImage.getHeight();
         String mimeType = getMimeType(suffix);
 
-        // Crear ruta relativa (nombre de carpeta + nombre de archivo)
-        String relativePath = outputDirectory.getFileName().toString() + "/" + filename;
+        // Crear ruta relativa (siempre usa "imgs" como carpeta)
+        String relativePath = "imgs/" + filename;
 
         // Calcular hashes perceptuales
         String[] hashes = null;
