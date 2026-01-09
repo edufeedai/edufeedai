@@ -103,6 +103,33 @@ public class DatabaseUtils {
                 "created_at INTEGER NOT NULL, " +
                 "updated_at INTEGER, " +
                 "FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE)");
+
+            // Tabla: submission_images (imágenes extraídas de PDFs)
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS submission_images (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "submission_id INTEGER NOT NULL, " +
+                "relative_path TEXT NOT NULL, " +
+                "mime_type TEXT NOT NULL, " +
+                "is_duplicate INTEGER DEFAULT 0, " +
+                "page_number INTEGER NOT NULL, " +
+                "image_index INTEGER NOT NULL, " +
+                "file_size INTEGER, " +
+                "width INTEGER, " +
+                "height INTEGER, " +
+                "openai_file_id TEXT, " +
+                "vision_description TEXT, " +
+                "created_at INTEGER NOT NULL, " +
+                "updated_at INTEGER, " +
+                "FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE, " +
+                "UNIQUE(submission_id, relative_path))");
+
+            // Índices para submission_images
+            stmt.executeUpdate("CREATE INDEX IF NOT EXISTS idx_submission_images_submission " +
+                "ON submission_images(submission_id)");
+            stmt.executeUpdate("CREATE INDEX IF NOT EXISTS idx_submission_images_duplicate " +
+                "ON submission_images(is_duplicate)");
+            stmt.executeUpdate("CREATE INDEX IF NOT EXISTS idx_submission_images_openai_file " +
+                "ON submission_images(openai_file_id)");
         }
     }
 
@@ -177,5 +204,90 @@ public class DatabaseUtils {
         }
 
         return null;
+    }
+
+    /**
+     * Inserta una imagen extraída en la base de datos.
+     * @param conn Conexión a la base de datos
+     * @param submissionId ID de la entrega
+     * @param relativePath Ruta relativa de la imagen
+     * @param mimeType MIME type de la imagen
+     * @param pageNumber Número de página del PDF
+     * @param imageIndex Índice de la imagen en la página
+     * @param fileSize Tamaño del archivo en bytes
+     * @param width Ancho de la imagen
+     * @param height Alto de la imagen
+     * @return ID de la imagen insertada
+     */
+    public static long insertSubmissionImage(Connection conn, int submissionId, String relativePath,
+                                            String mimeType, int pageNumber, int imageIndex,
+                                            long fileSize, int width, int height) throws SQLException {
+        long now = System.currentTimeMillis() / 1000;
+
+        PreparedStatement stmt = conn.prepareStatement(
+            "INSERT INTO submission_images (submission_id, relative_path, mime_type, " +
+            "page_number, image_index, file_size, width, height, created_at, updated_at) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            Statement.RETURN_GENERATED_KEYS
+        );
+
+        stmt.setInt(1, submissionId);
+        stmt.setString(2, relativePath);
+        stmt.setString(3, mimeType);
+        stmt.setInt(4, pageNumber);
+        stmt.setInt(5, imageIndex);
+        stmt.setLong(6, fileSize);
+        stmt.setInt(7, width);
+        stmt.setInt(8, height);
+        stmt.setLong(9, now);
+        stmt.setLong(10, now);
+
+        stmt.executeUpdate();
+
+        var rs = stmt.getGeneratedKeys();
+        if (rs.next()) {
+            return rs.getLong(1);
+        }
+
+        throw new SQLException("No se pudo obtener el ID de la imagen insertada");
+    }
+
+    /**
+     * Actualiza el openai_file_id de una imagen.
+     */
+    public static void updateImageOpenAIFileId(Connection conn, long imageId, String openaiFileId) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement(
+            "UPDATE submission_images SET openai_file_id = ?, updated_at = ? WHERE id = ?"
+        );
+        stmt.setString(1, openaiFileId);
+        stmt.setLong(2, System.currentTimeMillis() / 1000);
+        stmt.setLong(3, imageId);
+        stmt.executeUpdate();
+    }
+
+    /**
+     * Actualiza la descripción de Vision API de una imagen.
+     */
+    public static void updateImageVisionDescription(Connection conn, long imageId, String description) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement(
+            "UPDATE submission_images SET vision_description = ?, updated_at = ? WHERE id = ?"
+        );
+        stmt.setString(1, description);
+        stmt.setLong(2, System.currentTimeMillis() / 1000);
+        stmt.setLong(3, imageId);
+        stmt.executeUpdate();
+    }
+
+    /**
+     * Marca una imagen como duplicada.
+     */
+    public static void markImageAsDuplicate(Connection conn, long imageId, boolean isDuplicate) throws SQLException {
+        PreparedStatement stmt = conn.prepareStatement(
+            "UPDATE submission_images SET is_duplicate = ?, updated_at = ? WHERE id = ?"
+        );
+        stmt.setInt(1, isDuplicate ? 1 : 0);
+        stmt.setLong(2, System.currentTimeMillis() / 1000);
+        stmt.setLong(3, imageId);
+        stmt.executeUpdate();
     }
 }
