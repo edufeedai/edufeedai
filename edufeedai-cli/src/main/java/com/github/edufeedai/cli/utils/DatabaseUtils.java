@@ -116,6 +116,8 @@ public class DatabaseUtils {
                 "file_size INTEGER, " +
                 "width INTEGER, " +
                 "height INTEGER, " +
+                "dhash TEXT, " +
+                "phash TEXT, " +
                 "openai_file_id TEXT, " +
                 "vision_description TEXT, " +
                 "created_at INTEGER NOT NULL, " +
@@ -217,17 +219,20 @@ public class DatabaseUtils {
      * @param fileSize Tamaño del archivo en bytes
      * @param width Ancho de la imagen
      * @param height Alto de la imagen
+     * @param dHash Difference hash (perceptual)
+     * @param pHash Perceptive hash
      * @return ID de la imagen insertada
      */
     public static long insertSubmissionImage(Connection conn, int submissionId, String relativePath,
                                             String mimeType, int pageNumber, int imageIndex,
-                                            long fileSize, int width, int height) throws SQLException {
+                                            long fileSize, int width, int height,
+                                            String dHash, String pHash) throws SQLException {
         long now = System.currentTimeMillis() / 1000;
 
         PreparedStatement stmt = conn.prepareStatement(
             "INSERT INTO submission_images (submission_id, relative_path, mime_type, " +
-            "page_number, image_index, file_size, width, height, created_at, updated_at) " +
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "page_number, image_index, file_size, width, height, dhash, phash, created_at, updated_at) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             Statement.RETURN_GENERATED_KEYS
         );
 
@@ -239,8 +244,10 @@ public class DatabaseUtils {
         stmt.setLong(6, fileSize);
         stmt.setInt(7, width);
         stmt.setInt(8, height);
-        stmt.setLong(9, now);
-        stmt.setLong(10, now);
+        stmt.setString(9, dHash);
+        stmt.setString(10, pHash);
+        stmt.setLong(11, now);
+        stmt.setLong(12, now);
 
         stmt.executeUpdate();
 

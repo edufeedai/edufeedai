@@ -35,6 +35,7 @@ public class PDFImageExtractor extends PDFStreamEngine {
 
     private final List<ExtractedImage> extractedImages;
     private final Path outputDirectory;
+    private final ImageDeduplicator deduplicator;
     private int currentPageNumber;
     private int imageIndexInPage;
 
@@ -45,6 +46,7 @@ public class PDFImageExtractor extends PDFStreamEngine {
     public PDFImageExtractor(Path outputDirectory) {
         this.extractedImages = new ArrayList<>();
         this.outputDirectory = outputDirectory;
+        this.deduplicator = new ImageDeduplicator();
         this.currentPageNumber = 0;
         this.imageIndexInPage = 0;
     }
@@ -133,6 +135,14 @@ public class PDFImageExtractor extends PDFStreamEngine {
         // Crear ruta relativa (nombre de carpeta + nombre de archivo)
         String relativePath = outputDirectory.getFileName().toString() + "/" + filename;
 
+        // Calcular hashes perceptuales
+        String[] hashes = null;
+        try {
+            hashes = deduplicator.calculateHashes(imagePath);
+        } catch (IOException e) {
+            logger.warn("No se pudo calcular hash de imagen: {}", imagePath, e);
+        }
+
         // Crear objeto ExtractedImage
         ExtractedImage extractedImage = new ExtractedImage(
             relativePath,
@@ -143,6 +153,12 @@ public class PDFImageExtractor extends PDFStreamEngine {
             width,
             height
         );
+
+        // Asignar hashes si se calcularon correctamente
+        if (hashes != null && hashes.length == 2) {
+            extractedImage.setDHash(hashes[0]);
+            extractedImage.setPHash(hashes[1]);
+        }
 
         extractedImages.add(extractedImage);
 

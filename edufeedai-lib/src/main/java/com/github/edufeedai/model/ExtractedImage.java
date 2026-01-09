@@ -18,6 +18,9 @@ public class ExtractedImage {
     private final int width;
     private final int height;
     private boolean isDuplicate;
+    private String dHash;  // Difference hash (perceptual)
+    private String pHash;  // Perceptive hash
+    private String openaiFileId;  // ID del archivo en OpenAI después de subirlo
 
     public ExtractedImage(String relativePath, String mimeType, int pageNumber,
                          int imageIndex, long fileSize, int width, int height) {
@@ -29,6 +32,9 @@ public class ExtractedImage {
         this.width = width;
         this.height = height;
         this.isDuplicate = false;
+        this.dHash = null;
+        this.pHash = null;
+        this.openaiFileId = null;
     }
 
     public String getRelativePath() {
@@ -67,9 +73,33 @@ public class ExtractedImage {
         isDuplicate = duplicate;
     }
 
+    public String getDHash() {
+        return dHash;
+    }
+
+    public void setDHash(String dHash) {
+        this.dHash = dHash;
+    }
+
+    public String getPHash() {
+        return pHash;
+    }
+
+    public void setPHash(String pHash) {
+        this.pHash = pHash;
+    }
+
+    public String getOpenaiFileId() {
+        return openaiFileId;
+    }
+
+    public void setOpenaiFileId(String openaiFileId) {
+        this.openaiFileId = openaiFileId;
+    }
+
     @Override
     public String toString() {
-        return String.format("ExtractedImage{path='%s', mime='%s', page=%d, idx=%d, size=%d bytes, %dx%d, duplicate=%b}",
-                relativePath, mimeType, pageNumber, imageIndex, fileSize, width, height, isDuplicate);
+        return String.format("ExtractedImage{path='%s', mime='%s', page=%d, idx=%d, size=%d bytes, %dx%d, duplicate=%b, openaiFileId='%s'}",
+                relativePath, mimeType, pageNumber, imageIndex, fileSize, width, height, isDuplicate, openaiFileId);
     }
 }
