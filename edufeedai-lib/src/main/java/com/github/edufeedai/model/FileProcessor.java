@@ -215,11 +215,29 @@ public class FileProcessor {
             logger.debug("Guardando copia original en: {}", originalBackup);
             Files.copy(file.toPath(), originalBackup, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
-            // 3. Procesar PDF con OCRMyPDF (genera {nombre}.ocr.pdf)
+            // 3. Extraer imágenes del PDF ANTES de hacer OCR
+            logger.info("Extrayendo imágenes del PDF: {}", file.getName());
+            List<ExtractedImage> extractedImages = new ArrayList<>();
+            try {
+                extractedImages = PDFImageExtractor.extractImages(file.toPath());
+                logger.info("Imágenes extraídas: {}", extractedImages.size());
+
+                // Detectar duplicados usando perceptual hashing
+                if (!extractedImages.isEmpty()) {
+                    ImageDeduplicator deduplicator = new ImageDeduplicator();
+                    List<ImageDeduplicator.ImageCluster> clusters = deduplicator.detectDuplicates(extractedImages);
+                    logger.info("Detección de duplicados completada: {} clusters", clusters.size());
+                }
+            } catch (IOException e) {
+                logger.warn("No se pudieron extraer imágenes del PDF: {}", e.getMessage());
+                // Continuar con el procesamiento aunque falle la extracción de imágenes
+            }
+
+            // 4. Procesar PDF con OCRMyPDF (genera {nombre}.ocr.pdf)
             logger.info("Ejecutando OCRMyPDF sobre: {}", file.getName());
             Path ocrPdfPath = com.github.edufeedai.model.ocrlib.OCRMyPDF.ocrAndOptimize(file.toPath());
 
-            // 4. Reemplazar el PDF original con la versión OCR
+            // 5. Reemplazar el PDF original con la versión OCR
             logger.debug("Reemplazando PDF original con versión OCR");
             Files.move(ocrPdfPath, file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 
@@ -254,7 +272,7 @@ public class FileProcessor {
             }
         }
 
-        // 5. Extraer texto del PDF (con o sin OCR)
+        // 6. Extraer texto del PDF (con o sin OCR)
         String extractionMethod = ocrSuccessful ? "PDF procesado con OCR" : "PDF sin OCR (básico)";
         logger.info("Extrayendo texto del {}: {}", extractionMethod, file.getName());
 
