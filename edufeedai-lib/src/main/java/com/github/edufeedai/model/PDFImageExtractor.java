@@ -59,8 +59,7 @@ public class PDFImageExtractor extends PDFStreamEngine {
      */
     public static List<ExtractedImage> extractImages(Path pdfPath) throws IOException {
         // Crear subcarpeta para imágenes
-        String pdfName = pdfPath.getFileName().toString().replaceFirst("[.][^.]+$", "");
-        Path imagesDir = pdfPath.getParent().resolve(pdfName + "_imgs");
+        Path imagesDir = pdfPath.getParent().resolve("images");
         Files.createDirectories(imagesDir);
 
         logger.info("Extrayendo imágenes de PDF: {} -> {}", pdfPath, imagesDir);
